@@ -1,0 +1,4 @@
+{
+  "ref": "main",
+  "reason": "Track upstream main. To roll back a bad upstream change, set ref to a known-good 40-character commit SHA (see BUILD_INFO.json history on the published branch)."
+}

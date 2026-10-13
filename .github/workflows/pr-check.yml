@@ -1,0 +1,94 @@
+name: PR check
+
+# pull_request (never pull_request_target): PR code runs with a read-only
+# token on fork PRs and never sees repository secrets.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write # only used by the final comment step
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out PR merge commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 2 # merge commit + PR head, for the [size-override] check
+          persist-credentials: false # build scripts from the PR never get a token
+
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22"
+
+      - name: Build
+        run: node scripts/build.js
+
+      - name: Validate
+        id: validate
+        continue-on-error: true
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git log -1 --format=%B "$HEAD_SHA" | grep -qF '[size-override]'; then
+            echo "[size-override] found in PR head commit message"
+            export SIZE_OVERRIDE=1
+          fi
+          node scripts/validate.js 2>&1 | tee validate.log
+          exit "${PIPESTATUS[0]}"
+
+      - name: Diff against published rules
+        if: always()
+        env:
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        run: |
+          set -uo pipefail
+          if git fetch --depth=1 "$REPO_URL" published 2>/dev/null; then
+            git show FETCH_HEAD:detection-rules.json > published.json 2>/dev/null || rm -f published.json
+          fi
+          {
+            node scripts/diff.js published.json dist/detection-rules.json
+            echo
+            if [ "$VALIDATE_OUTCOME" = "success" ]; then
+              echo "**Validation:** passed"
+            else
+              echo "**Validation:** FAILED"
+              echo
+              echo '```'
+              grep -E 'ERROR|WARN|FAILED' validate.log | head -40 || true
+              echo '```'
+            fi
+          } > diff.md
+          cat diff.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment diff on PR
+        if: always() && hashFiles('diff.md') != ''
+        # Fork PRs get a read-only token; the summary above still has the diff.
+        continue-on-error: true
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const fs = require("fs");
+            const body = fs.readFileSync("diff.md", "utf8");
+            const marker = "<!-- virtech-rules-diff -->";
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const mine = comments.find((c) => c.user?.type === "Bot" && c.body?.includes(marker));
+            if (mine) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+      - name: Fail if validation failed
+        if: steps.validate.outcome != 'success'
+        run: |
+          echo "::error::Validation failed; see the Validate step log."
+          exit 1

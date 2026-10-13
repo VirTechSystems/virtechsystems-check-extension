@@ -1,0 +1,19 @@
+{
+  "domain_patterns": [
+    {
+      "pattern": "^https:\\/\\/([a-z0-9-]+\\.)*pure\\.cloud(/.*)?$",
+      "reason": "Genesys Cloud: Levenshtein domain-squatting false positive (pure vs azure)",
+      "ticket": "T20261012.0107",
+      "added_by": "kphillips",
+      "added": "2026-10-13"
+    },
+    {
+      "pattern": "^https:\\/\\/([a-z0-9-]+\\.)*mypurecloud\\.(com|ie|de|jp|com\\.au)(/.*)?$",
+      "reason": "Genesys Cloud (legacy mypurecloud regions): Levenshtein domain-squatting false positive (pure vs azure)",
+      "ticket": "T20261012.0107",
+      "added_by": "kphillips",
+      "added": "2026-10-13"
+    }
+  ],
+  "remove_upstream": []
+}

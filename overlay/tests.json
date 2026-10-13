@@ -1,0 +1,33 @@
+{
+  "^https:\\/\\/([a-z0-9-]+\\.)*pure\\.cloud(/.*)?$": {
+    "match": [
+      "https://apps.usw2.pure.cloud",
+      "https://login.usw2.pure.cloud",
+      "https://pure.cloud"
+    ],
+    "no_match": [
+      "https://evil.com",
+      "https://pure.cloud.evil.com",
+      "https://notpure.cloud",
+      "https://evil.com/x.pure.cloud",
+      "http://apps.usw2.pure.cloud"
+    ]
+  },
+  "^https:\\/\\/([a-z0-9-]+\\.)*mypurecloud\\.(com|ie|de|jp|com\\.au)(/.*)?$": {
+    "match": [
+      "https://apps.mypurecloud.com",
+      "https://login.mypurecloud.ie",
+      "https://apps.mypurecloud.de",
+      "https://apps.mypurecloud.jp",
+      "https://apps.mypurecloud.com.au"
+    ],
+    "no_match": [
+      "https://evil.com",
+      "https://mypurecloud.com.evil.com",
+      "https://notmypurecloud.com",
+      "https://mypurecloud.co",
+      "https://evil.com/x.mypurecloud.com",
+      "http://apps.mypurecloud.com"
+    ]
+  }
+}
