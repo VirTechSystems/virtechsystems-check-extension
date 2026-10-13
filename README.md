@@ -1,13 +1,12 @@
 # VirTech Check detection rules
 
-This repo publishes a merged `detection-rules.json` for the CyberDrain
-[Check](https://github.com/CyberDrain/Check) browser extension. The file is
-upstream's rules plus our small, reviewed overlay. Endpoints point Check's
-managed policy `customRulesUrl` at the published file.
+Merged `detection-rules.json` for the CyberDrain
+[Check](https://github.com/CyberDrain/Check) browser extension: upstream rules
+plus a reviewed VirTech overlay. Endpoints load it through Check's managed
+policy `customRulesUrl`.
 
-`customRulesUrl` **replaces** Check's whole rules file. It does not merge. The
-output here is therefore always a complete rules file: upstream with our
-overlay applied.
+`customRulesUrl` replaces Check's entire rules file, so the published file is
+always complete: upstream with the overlay applied.
 
 ## Published URL and policy values
 
@@ -15,21 +14,19 @@ overlay applied.
 https://raw.githubusercontent.com/VirTechSystems/virtechsystems-check-extension/published/detection-rules.json
 ```
 
-The file is served from the `published` branch. Only CI writes that branch, so
-commits on `main` never reach clients until they have been built and
-validated. `published/BUILD_INFO.json` gives the upstream version and commit,
-the overlay commit, and the build time. The same data is also in the
-`virtech_build` key of the rules file.
+The file is served from the `published` branch, which only CI writes, so
+commits on `main` reach clients only after they are built and validated.
+`BUILD_INFO.json` on `published` records the upstream version and commit, the
+overlay commit and the build time. The same data is in the `virtech_build` key
+of the rules file.
 
 | Policy | Type | Value |
 |---|---|---|
 | `customRulesUrl` | REG_SZ | URL above |
 | `updateInterval` | REG_DWORD | `6` (hours; allowed 1–168, Check default 24) |
 
-**Why 6 hours:** a bad publish, and its rollback, reaches every endpoint within
-about `updateInterval` plus up to 5 minutes of raw.githubusercontent.com
-caching. At 24 hours a rollback can take a full day to land. Six fetches a day
-of a ~70 KB file is negligible load.
+Endpoints pick up a change, including a rollback, within `updateInterval`
+plus up to 5 minutes of raw.githubusercontent.com caching.
 
 Registry paths (HKLM, machine policy):
 
@@ -50,8 +47,8 @@ Windows Registry Editor Version 5.00
 "updateInterval"=dword:00000006
 ```
 
-If Check is already deployed through CIPP or Intune, set these values in that
-tool. Otherwise its next run may overwrite a registry value written by hand.
+Where Check is deployed through CIPP or Intune, set these values in that tool
+so they are not overwritten.
 
 **Kill switch:** remove `customRulesUrl` from policy. Check then goes back to
 its built-in default, upstream's raw rules URL, on its next refresh.
@@ -113,9 +110,8 @@ Pattern rules (enforced by `validate.js`):
 - Start with `^https:\/\/` and end with `(/.*)?$` or `$`.
 - The host is literal labels with escaped dots (`\.`) and optional `(a|b)`
   groups. No `.*` or `.+`.
-- Subdomain wildcard: use `([a-z0-9-]+\.)*`, which also matches the bare
-  domain. `[^/]*\.` is accepted to match upstream's style, but it requires a
-  subdomain and is looser.
+- Subdomain wildcard: `([a-z0-9-]+\.)*` (also matches the bare domain).
+  `[^/]*\.` is also accepted, as used upstream; it requires a subdomain.
 - No pattern may match `login.microsoftonline.com`, `login.microsoft.com` or
   `login.live.com`.
 - Validation also generates lookalikes from each `match` URL and fails if any
@@ -134,9 +130,9 @@ deletes that pattern itself, the build warns that the entry is stale.
 scalars replace. Only `domain_squatting` is allowed, and each value must keep
 upstream's type. Enterprise policy `domainSquatting` **overrides** the
 rules-file settings for `deviationThreshold`, `action`, `severity`,
-`algorithms` and `logDetections`. Squatting detection only runs when policy
-`domainSquatting.enabled` is `true`. So a change here may do nothing on
-tenants that set those policies.
+`algorithms` and `logDetections`, and squatting detection runs only when policy
+`domainSquatting.enabled` is `true`. Tenants that set these policies are not
+affected by the equivalent overrides here.
 
 ## Review rules
 
@@ -150,9 +146,8 @@ tenants that set those policies.
   - the ticket exists;
   - the PR comment's added/removed list shows only what the ticket asks for.
 - An exclusion turns off **all** of Check's phishing checks for that origin,
-  not just the one that produced the false positive. Prefer fixing the root
-  cause, or a client-scoped `urlAllowlist` policy, when only one tenant is
-  affected.
+  not only the one that produced the false positive. When a single tenant is
+  affected, use that tenant's `urlAllowlist` policy instead.
 - `[size-override]` in a commit message allows the output to differ from
   upstream by more than ±25%. The reviewer must confirm why.
 
@@ -170,8 +165,8 @@ looks like a key, token, SAS URL or private key. Also:
   email".
 - The deploy key is stored only as an environment secret. The repo holds no
   secrets.
-- Be aware that the published exclusion list is visible to anyone. It reveals
-  which vendor domains our endpoints skip. Keep exclusions narrow.
+- The published exclusion list is public and shows which vendor domains
+  endpoints skip. Keep exclusions narrow.
 
 ## Rollback
 
@@ -187,11 +182,12 @@ through `virtech_build.overlay_commit`.
   fixed, revert that PR to track `main` again. While pinned, every build warns.
 - **Emergency:** remove `customRulesUrl` from policy (see Kill switch).
 
-Never force-push or edit `published` by hand. Its rules block that anyway.
+`published` is never edited by hand; its ruleset blocks direct pushes.
 
-## One-time setup (repository admin)
+## Repository configuration
 
-These are manual steps; nothing in this repo configures them.
+Reference for the settings this repo depends on. They are configured in
+GitHub, not by anything in the repo.
 
 ### 1. Publish deploy key
 
@@ -223,12 +219,10 @@ bypass actors.
 - Block force pushes.
 - Bypass list: **Deploy keys** only.
 
-Your brief asked for "PR required, 1 approval, status checks required" on
-`published` as well. That would stop the nightly sync, which has to publish
-with no human action. This ruleset gets the same result a different way: the
-only writer is the deploy key, and only `main`-branch CI can use it.
-Everything published has therefore already passed a reviewed PR and
-validation on `main`, plus validation in the publishing run itself.
+The deploy key is the only writer to `published`, and only CI on `main` can
+use it. Everything published has passed a reviewed, validated PR on `main`
+and validation again in the publishing run, while the nightly sync runs
+without manual steps.
 
 ### 3. Actions and security settings
 
@@ -239,44 +233,37 @@ validation on `main`, plus validation in the publishing run itself.
   - Fork PR workflows: **Require approval for all outside collaborators**.
   - Actions permissions: "Allow enterprise, and select non-enterprise, actions
     and reusable workflows". Allow actions created by GitHub. Tick **Require
-    actions to be pinned to a full-length commit SHA** if offered.
+    actions to be pinned to a full-length commit SHA**.
 - Settings → Code security:
   - Turn on Secret scanning and **Push protection**, Dependabot alerts, and
     Private vulnerability reporting.
   - Dependabot opens monthly PRs to bump the pinned action SHAs
     (`.github/dependabot.yml`).
-- Optional: add `.github/CODEOWNERS` naming the reviewers for `overlay/`,
-  `scripts/` and `.github/`, and tick "Require review from Code Owners".
-- Nightly cron: GitHub disables scheduled workflows in public repos after 60
-  days without repository activity. If the nightly stops, re-enable it under
-  Actions.
+- GitHub disables scheduled workflows in public repos after 60 days without
+  repository activity. If the nightly run stops, re-enable it under Actions.
 
 ### 4. First publish
 
-Merge to `main` (or run **Build and publish rules** manually from Actions).
-The first run creates `published`. Check that the URL above returns JSON with
-a `virtech_build` key.
+Run **Build and publish rules** from Actions on `main`. The first run creates
+`published`.
 
-## Behaviour of Check this design relies on
+## Check behaviour
 
-Verified against CyberDrain/Check `main`, `scripts/modules/detection-rules-manager.js`,
+From CyberDrain/Check `scripts/modules/detection-rules-manager.js`,
 `scripts/content.js`, `scripts/background.js` and
 `scripts/modules/domain-squatting-detector.js`:
 
-- **Unknown top-level keys are safe.** The manager caches whatever JSON it
-  fetches, and `content.js` reads keys by name. The only place it walks every
-  key is a debug printout. So the extra `virtech_build` key is harmless.
+- **Unknown top-level keys are ignored.** The manager caches the fetched JSON
+  as-is and `content.js` reads keys by name, so `virtech_build` has no effect
+  on detection.
 - **A failed fetch** (non-2xx or invalid JSON) falls back to the bundled rules.
   They are used in memory only, are not cached, and the remote URL is retried
   on the next request.
 - **`domain_patterns`** are tested with `new RegExp(pattern, "i")` against
   `location.origin`. Invalid patterns are logged and skipped.
-- **Squatting vs. exclusions:** in `content.js`, an excluded origin
-  returns early ("EXCLUDED TRUSTED DOMAIN - … exiting immediately") before
-  the step that sends `check_domain_squatting`. That is the only place the
-  squatting check is triggered. From the source, an exclusion should
-  therefore suppress the squatting banner. This still has to be confirmed on a
-  real endpoint: TESTING.md step 3.
+- **Squatting vs. exclusions:** in `content.js`, an excluded origin returns
+  before the step that sends `check_domain_squatting`, the only trigger for
+  the squatting check. Endpoint confirmation: TESTING.md step 3, results below.
 
 ### Endpoint test result: exclusion vs. domain-squatting banner
 

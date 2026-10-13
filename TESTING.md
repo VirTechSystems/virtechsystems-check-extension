@@ -62,8 +62,6 @@ Published URL:
 
 ## 3. Does the exclusion alone suppress the domain-squatting banner?
 
-This answers the open question in the README. The source suggests "yes".
-
 - [ ] Confirm that policy `domainSquatting.enabled` is `true` on the device
       (`edge://policy`). If it is off, squatting never runs and this test
       proves nothing.
