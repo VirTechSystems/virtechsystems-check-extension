@@ -46,6 +46,7 @@
     "domain_patterns": [
       "^https:\\/\\/(.*\\.)?cyberdrain\\.com(/.*)?$",
       "^https:\\/\\/(?:[^/]*\\.)?zoom\\.us(/.*)?$",
+      "^https:\\/\\/([a-z0-9-]+\\.)*box\\.com(/.*)?$",
       "^https:\\/\\/([a-z0-9-]+\\.)*mypurecloud\\.(com|ie|de|jp|com\\.au)(/.*)?$",
       "^https:\\/\\/([a-z0-9-]+\\.)*pure\\.cloud(/.*)?$",
       "^https:\\/\\/[^/]*\\.(facebook|twitter|x|linkedin|instagram)\\.com(/.*)?$",
@@ -2259,10 +2260,10 @@
     "upstream_pinned": false,
     "upstream_version": "1.2.5",
     "upstream_lastUpdated": "2026-07-08T00:00:00Z",
-    "overlay_commit": "1efde18c24c880089f982201e6026860b0299ce5",
-    "overlay_patterns_added": 2,
+    "overlay_commit": "d9cc6c16f62b3cd57b27e6614dad094f2041d91d",
+    "overlay_patterns_added": 3,
     "upstream_patterns_removed": 0,
     "overrides_keys": [],
-    "build_timestamp": "2026-10-13T13:07:04.230Z"
+    "build_timestamp": "2026-10-13T14:40:30.152Z"
   }
 }
