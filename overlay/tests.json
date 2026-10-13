@@ -29,5 +29,25 @@
       "https://evil.com/x.mypurecloud.com",
       "http://apps.mypurecloud.com"
     ]
+  },
+  "^https:\\/\\/([a-z0-9-]+\\.)*box\\.com(/.*)?$": {
+    "match": [
+      "https://contoso.app.box.com",
+      "https://app.box.com",
+      "https://account.box.com",
+      "https://www.box.com",
+      "https://box.com"
+    ],
+    "no_match": [
+      "https://evil.com",
+      "https://xbox.com",
+      "https://www.xbox.com",
+      "https://dropbox.com",
+      "https://box.com.evil.com",
+      "https://notbox.com",
+      "https://box.co",
+      "https://evil.com/x.box.com",
+      "http://app.box.com"
+    ]
   }
 }

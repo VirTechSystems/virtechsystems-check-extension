@@ -13,6 +13,13 @@
       "ticket": "T20261012.0107",
       "added_by": "kphillips",
       "added": "2026-10-13"
+    },
+    {
+      "pattern": "^https:\\/\\/([a-z0-9-]+\\.)*box\\.com(/.*)?$",
+      "reason": "Box (shared links, *.app.box.com enterprise subdomains): domain-squatting false positive (box vs xbox)",
+      "ticket": "T20261013.0041",
+      "added_by": "kphillips",
+      "added": "2026-10-13"
     }
   ],
   "remove_upstream": []
